@@ -1,103 +1,168 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect } from "react";
+import questionsData from "./data/questions.json"; // Ensure this file is present
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [startQuiz, setStartQuiz] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [timer, setTimer] = useState(30);
+  const [showResults, setShowResults] = useState(false);
+  const [score, setScore] = useState(0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  useEffect(() => {
+    if (startQuiz && timer > 0 && selectedOption === null) {
+      const countdown = setTimeout(() => setTimer((prev) => prev - 1), 1000);
+      return () => clearTimeout(countdown);
+    }
+    if (timer === 0) {
+      handleNext();
+    }
+  }, [timer, startQuiz, selectedOption]);
+
+  const handleOptionClick = (option) => {
+    setSelectedOption(option);
+    if (option === questionsData[currentQuestion].answer) {
+      setScore((prev) => prev + 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentQuestion < questionsData.length - 1) {
+      setCurrentQuestion((prev) => prev + 1);
+      setSelectedOption(null);
+      setTimer(30);
+    } else {
+      setShowResults(true);
+      setStartQuiz(false);
+    }
+  };
+
+  const circumference = 2 * Math.PI * 45;
+  const strokeDashoffset = circumference - (timer / 30) * circumference;
+
+  return (
+    <div
+      className="flex items-center justify-center h-screen bg-cover bg-center"
+      style={{ backgroundImage: "url('/space.jpeg')" }} // Update your background image path
+    >
+      <div className="w-full max-w-3xl p-8 bg-white rounded-lg shadow-lg text-center relative">
+        {/* Timer and Score Section */}
+        {startQuiz && !showResults && (
+          <div className="absolute top-4 right-4 flex items-center space-x-4">
+            {/* Circular Timer */}
+            <div className="relative w-12 h-12">
+              <svg width="50" height="50" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  stroke="lightgray"
+                  strokeWidth="5"
+                  fill="transparent"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  stroke="red"
+                  strokeWidth="5"
+                  fill="transparent"
+                  strokeDasharray={2 * Math.PI * 45}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-lg font-bold">
+                {timer}
+              </span>
+            </div>
+
+            {/* Score Display */}
+            <div className="text-lg font-bold text-blue-700">
+              Score: {score}
+            </div>
+          </div>
+        )}
+
+        {/* Start Page */}
+        {!startQuiz && !showResults ? (
+          <>
+            <h1 className="text-xl font-bold mb-4 text-blue-800">Welcome to the Quiz</h1>
+            <button
+              onClick={() => setStartQuiz(true)}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Start
+            </button>
+          </>
+        ) : startQuiz ? (
+          <>
+            {/* Question */}
+            <h2 className="text-lg font-semibold text-blue-800">
+              {questionsData[currentQuestion].question}
+            </h2>
+
+            {/* Options */}
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              {questionsData[currentQuestion].options.map((option, index) => (
+                <button
+                  key={index}
+                  className={`relative block w-full p-3 rounded-lg transition-all border-2 ${
+                    selectedOption
+                      ? option === questionsData[currentQuestion].answer
+                        ? "border-green-500 text-green-500"
+                        : option === selectedOption
+                        ? "border-red-500 text-red-500"
+                        : "border-gray-200"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  onClick={() => handleOptionClick(option)}
+                  disabled={!!selectedOption}
+                >
+                  {option}
+                  {/* Tick or Cross Icon */}
+                  {selectedOption && (
+                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xl">
+                      {option === questionsData[currentQuestion].answer ? "✅" : option === selectedOption ? "❌" : ""}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Next Button */}
+            <button
+              onClick={handleNext}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mt-4"
+              disabled={!selectedOption}
+            >
+              Next
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Results Page */}
+            <h1 className="text-xl font-bold mb-4 text-blue-800">Quiz Completed!</h1>
+            <p className="text-lg font-semibold text-blue-800">
+              Your Score: {score} / {questionsData.length}
+            </p>
+            <button
+              onClick={() => {
+                setShowResults(false);
+                setCurrentQuestion(0);
+                setScore(0);
+                setSelectedOption(null);
+                setTimer(30);
+                setStartQuiz(true);
+              }}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mt-4"
+            >
+              Restart Quiz
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
